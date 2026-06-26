@@ -149,6 +149,23 @@
 
   <div class="scanlines"></div>
 
+
+  <!-- THE OFFLINE GATEKEEPER -->
+  <div id="connection-blocker" class="fixed inset-0 z-[99999999] bg-[#030811] flex flex-col items-center justify-center p-6 text-center transition-opacity duration-1000">
+      <div class="scanlines"></div>
+      <i class="bi bi-wifi text-6xl text-themeRed mb-6 animate-pulse shadow-[0_0_15px_var(--primary-red)] rounded-full p-4 border-2 border-themeRed"></i>
+      <h2 class="font-heading text-3xl md:text-5xl uppercase mb-4 text-themeText sci-fi-glow-text">Network Detected</h2>
+      <p class="font-punchy text-lg text-themeYellow uppercase tracking-widest max-w-2xl mb-8 leading-relaxed">
+        The mainframe is too loud. The illusions are streaming in. <br><br>
+        <span class="text-themeRed">> DIRECTIVE:</span> Sever your internet connection to access the unvarnished truth.
+      </p>
+      <div class="text-themeText/50 font-punchy text-sm animate-pulse uppercase tracking-widest">
+        Awaiting Offline Status...
+      </div>
+  </div>
+
+  
+
   <div id="cynic-cookie-banner" class="fixed bottom-0 left-0 w-full bg-themeCard border-t-2 border-themeRed z-[99999] p-4 flex flex-col sm:flex-row items-center justify-between shadow-[0_0_30px_var(--primary-red)] hidden">
       <div class="text-themeText font-punchy text-xs md:text-sm uppercase tracking-widest text-center sm:text-left w-full sm:w-auto mb-4 sm:mb-0">
           <span class="text-themeRed font-bold animate-pulse">>> SYSTEM ALERT:</span> We do not use cookies. We do not track you. Frankly, your personal data is fundamentally uninteresting to us.
@@ -412,6 +429,37 @@ Type 'help' to view available operations.
 
   <script>
     $(document).ready(function() {
+
+
+      // --- THE OFFLINE GATEKEEPER LOGIC ---
+      const $blocker = $('#connection-blocker');
+
+      function handleConnectionChange() {
+          if (navigator.onLine) {
+              // User is ONLINE: Lock the screen
+              $blocker.removeClass('hidden').css('opacity', '1');
+              $('body').css('overflow', 'hidden'); 
+          } else {
+              // User is OFFLINE: Grant access
+              $blocker.css('opacity', '0');
+              setTimeout(() => { $blocker.addClass('hidden'); }, 1000);
+              $('body').css('overflow', ''); 
+              
+              // Secret terminal log injection
+              if(!window.offlineLogged) {
+                  $('#terminal-output').append('\n\nSYS.LOG // NETWORK SEVERED. ILLUSIONS BLOCKED.\nWELCOME TO THE DESERT OF THE REAL.\n');
+                  window.offlineLogged = true;
+              }
+          }
+      }
+
+      // Check immediately on load
+      handleConnectionChange();
+
+      // Listen for connection toggles
+      window.addEventListener('online', handleConnectionChange);
+      window.addEventListener('offline', handleConnectionChange);
+
 
       // --- WEB AUDIO API ---
       const AudioContext = window.AudioContext || window.webkitAudioContext;
