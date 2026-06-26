@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="The Cynic's Lantern - A modern space for unvarnished truth and ancient Cynicism philosophy, embracing virtue, radical honesty, and intellectual freedom." />
+  <meta name="keywords" content="cynicism, philosophy, virtue, radical honesty, ancient wisdom, modern cynics, self-sufficiency" />
+  <title>The Cynic's Lantern | Interface V-400.BC</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600&family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  
+  <link href="https://unpkg.com/vis-timeline/standalone/umd/vis-timeline-graph2d.min.css" rel="stylesheet" />
+  <script src="https://unpkg.com/vis-timeline/standalone/umd/vis-timeline-graph2d.min.js"></script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            themeBg: 'var(--bs-body-bg)',
+            themeText: 'var(--bs-body-color)',
+            themeRed: 'var(--primary-red)',
+            themeYellow: 'var(--accent-yellow)',
+            themeCard: 'var(--card-bg)',
+            themeBorder: 'var(--border-color)',
+          },
+          fontFamily: {
+            heading: ['Orbitron', 'sans-serif'],
+            body: ['Chakra Petch', 'sans-serif'],
+            punchy: ['Share Tech Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --bs-body-bg: #030811; --bs-body-color: #a8dadc;
+      --primary-red: #ff0055; --accent-yellow: #00f3ff;
+      --card-bg: #071324; --border-color: #005f8f;
+    }
+    [data-theme='dark'] {
+      --bs-body-bg: #0a0000; --bs-body-color: #ffb3b3;
+      --primary-red: #ff0000; --accent-yellow: #ff6600;
+      --card-bg: #140000; --border-color: #800000;
+    }
+    [data-theme='manuscript'] {
+      --bs-body-bg: #001100; --bs-body-color: #33ff33;
+      --primary-red: #00ff00; --accent-yellow: #ccffcc;
+      --card-bg: #001a00; --border-color: #008800;
+    }
+    
+    body { background-color: var(--bs-body-bg); color: var(--bs-body-color); transition: background-color 0.3s ease, color 0.3s ease; letter-spacing: 0.05em; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bs-body-bg); border-left: 1px solid var(--border-color); }
+    ::-webkit-scrollbar-thumb { background: var(--primary-red); }
+
+    .scanlines { position: fixed; inset: 0; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.25)); background-size: 100% 4px; z-index: 9999998; pointer-events: none; opacity: 0.6; }
+    .hud-grid-overlay { position: absolute; inset: 0; background-image: linear-gradient(var(--border-color) 1px, transparent 1px), linear-gradient(90deg, var(--border-color) 1px, transparent 1px); background-size: 30px 30px; opacity: 0.07; pointer-events: none; z-index: 0; }
+
+    /* SYS.REQ Header Text Mod - Upped font size for visibility */
+    .hud-header::before { 
+        content: 'SYS.REQ // '; 
+        display: block; 
+        color: var(--border-color); 
+        font-size: 0.55em; 
+        margin-bottom: 0.8rem; 
+        letter-spacing: 0.25em; 
+        font-family: 'Share Tech Mono', monospace; 
+        opacity: 0.8;
+    }
+    
+    .sci-fi-border { border: 1px solid var(--border-color); box-shadow: 0 0 10px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.5); position: relative; }
+    .sci-fi-border::after { content: ''; position: absolute; top: -1px; left: -1px; right: -1px; bottom: -1px; border: 1px solid var(--primary-red); opacity: 0.3; pointer-events: none; }
+    
+    .tilt-card { transition: transform 0.1s ease-out, box-shadow 0.1s ease-out; transform-style: preserve-3d; will-change: transform; }
+
+    .sci-fi-glow-text { text-shadow: 0 0 8px var(--primary-red); }
+    .sci-fi-glow-text-yellow { text-shadow: 0 0 8px var(--accent-yellow); }
+    .content-relative { position: relative; z-index: 10; }
+
+    .reveal-on-scroll { opacity: 0; transform: translateY(30px) scale(0.98); transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); will-change: opacity, transform; }
+    .reveal-on-scroll.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+
+    @keyframes css-glitch {
+      0% { clip-path: inset(10% 0 80% 0); transform: translate(-2px, 2px); color: var(--primary-red); }
+      20% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); color: var(--accent-yellow); }
+      40% { clip-path: inset(40% 0 40% 0); transform: translate(2px, 2px); }
+      60% { clip-path: inset(20% 0 60% 0); transform: translate(-2px, -2px); }
+      80% { clip-path: inset(60% 0 10% 0); transform: translate(-2px, 2px); color: var(--primary-red); }
+      100% { clip-path: inset(0 0 0 0); transform: translate(0, 0); }
+    }
+    .glitch-active { animation: css-glitch 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+    .remove-transform { transform: none !important; transition: none !important; will-change: auto !important; }
+
+    @keyframes scroll-data { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .animate-data-stream { display: inline-block; white-space: nowrap; animation: scroll-data 30s linear infinite; }
+
+    .vis-timeline { border: 1px solid var(--border-color); font-family: 'Share Tech Mono', monospace; background-color: var(--card-bg); border-radius: 0; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); }
+    .vis-item { background-color: var(--bs-body-bg); border-color: var(--primary-red); color: var(--bs-body-color); box-shadow: 0 0 10px var(--primary-red); border-radius: 0; border-width: 1px; }
+    .vis-item.vis-selected { border-color: var(--accent-yellow); background-color: var(--card-bg); box-shadow: 0 0 15px var(--accent-yellow); }
+    .vis-time-axis .vis-text { color: var(--accent-yellow); font-size: 0.8rem; }
+    .vis-time-axis .vis-grid.vis-minor { border-color: var(--border-color); opacity: 0.3; }
+    .vis-time-axis .vis-grid.vis-major { border-color: var(--primary-red); opacity: 0.5; }
+    .vis-panel.vis-bottom, .vis-panel.vis-center, .vis-panel.vis-left, .vis-panel.vis-right, .vis-panel.vis-top { border-color: var(--border-color); }
+
+    .timeline-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; max-height: 100dvh !important; z-index: 999999 !important; margin: 0 !important; padding: 1.5rem !important; padding-top: calc(1.5rem + env(safe-area-inset-top, 0px)) !important; border-radius: 0 !important; display: flex; flex-direction: column; background-color: var(--bs-body-bg) !important; background-image: linear-gradient(var(--border-color) 1px, transparent 1px), linear-gradient(90deg, var(--border-color) 1px, transparent 1px) !important; background-size: 50px 50px !important; }
+    .timeline-fullscreen::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: -1; pointer-events: none; }
+    .timeline-fullscreen #philosophy-timeline { flex-grow: 1; height: auto !important; }
+
+    #terminal-overlay { background-color: #050505; background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.05) 2px, rgba(0,255,0,0.05) 4px); }
+    .terminal-text { color: #33ff33; text-shadow: 0 0 5px #33ff33, 0 0 10px #33ff33; }
+
+    .skip-link { position: absolute; top: -100px; left: 20px; z-index: 2000; transition: top 0.3s; }
+    .skip-link:focus { top: 20px; }
+    *:focus-visible { outline: 2px solid var(--accent-yellow); outline-offset: 4px; }
+    .nav-link { position: relative; overflow: hidden; }
+    .nav-link::before { content: '['; margin-right: 4px; color: var(--border-color); opacity: 0; transition: 0.3s; }
+    .nav-link::after { content: ']'; margin-left: 4px; color: var(--border-color); opacity: 0; transition: 0.3s; }
+    .nav-link:hover::before, .nav-link:hover::after { opacity: 1; color: var(--primary-red); }
+    .nav-link:hover { color: var(--primary-red); text-shadow: 0 0 5px var(--primary-red); }
+    #navbarNav { display: none; }
+    @media (min-width: 1024px) { #navbarNav { display: flex !important; } }
+    .cyber-img { filter: contrast(1.2) saturate(1.5) hue-rotate(180deg) brightness(0.8); mix-blend-mode: luminosity; border: 1px solid var(--border-color); }
+  </style>
+</head>
+<body class="font-body antialiased overflow-x-hidden selection:bg-themeYellow selection:text-black transition-opacity duration-1000" id="site-wrapper">
+
+  <div class="scanlines"></div>
+
+  <div id="cynic-cookie-banner" class="fixed bottom-0 left-0 w-full bg-themeCard border-t-2 border-themeRed z-[99999] p-4 flex flex-col sm:flex-row items-center justify-between shadow-[0_0_30px_var(--primary-red)] hidden">
+      <div class="text-themeText font-punchy text-xs md:text-sm uppercase tracking-widest text-center sm:text-left w-full sm:w-auto mb-4 sm:mb-0">
+          <span class="text-themeRed font-bold animate-pulse">>> SYSTEM ALERT:</span> We do not use cookies. We do not track you. Frankly, your personal data is fundamentally uninteresting to us.
+      </div>
+      <button id="dismiss-cookie" class="ui-interact bg-themeRed text-white font-punchy text-sm uppercase tracking-wider sm:tracking-widest px-4 py-3 border border-themeRed hover:bg-transparent hover:text-themeRed hover:shadow-[0_0_15px_var(--primary-red)] transition-all focus:outline-none w-full sm:w-auto text-center whitespace-normal break-words leading-tight">
+        Acknowledge Insignificance
+      </button>
+  </div>
+
+  <a href="#main-content" class="skip-link bg-themeYellow text-black px-4 py-2 font-bold shadow-[0_0_15px_var(--accent-yellow)] rounded-none border border-themeText">Skip to Content</a>
+
+  <button id="scrollTopBtn" title="Go to top" aria-label="Scroll to top of page" class="ui-interact fixed bottom-20 right-6 z-50 hidden bg-themeBg border-2 border-themeRed text-themeRed w-12 h-12 rounded-none shadow-[0_0_15px_var(--primary-red)] transition-transform transform hover:-translate-y-1 hover:bg-themeRed hover:text-themeBg focus:outline-none flex items-center justify-center text-xl">
+    <i class="bi bi-chevron-double-up"></i>
+  </button>
+
+  <nav class="sticky top-0 z-40 bg-themeBg/95 backdrop-blur-md border-b-2 border-themeBorder shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <a id="brand-logo" class="ui-interact font-heading text-2xl uppercase tracking-widest text-themeText font-bold flex items-center gap-2 select-none cursor-pointer" title="Hyper-Scroll to Protocols">
+          <i class="bi bi-cpu text-themeRed"></i> CYNIC_OS
+        </a>
+        <div class="hidden lg:flex items-center space-x-4" id="nav-desktop">
+          <a class="ui-interact nav-link font-semibold text-sm uppercase tracking-widest text-themeText transition-all" href="#manifesto">Manifesto</a>
+          <a class="ui-interact nav-link font-semibold text-sm uppercase tracking-widest text-themeText transition-all" href="#philosophy">Philosophy</a>
+          <a class="ui-interact nav-link font-semibold text-sm uppercase tracking-widest text-themeText transition-all" href="#tenets">Protocol</a>
+          <a class="ui-interact nav-link font-semibold text-sm uppercase tracking-widest text-themeText transition-all" href="#quotes">Data_Logs</a>
+          <a class="ui-interact nav-link font-semibold text-sm uppercase tracking-widest text-themeText transition-all" href="#follies">Errors</a>
+          <a class="ui-interact nav-link font-semibold text-sm uppercase tracking-widest text-themeText transition-all" href="#newsletter">Sync</a>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="terminal-btn" class="ui-interact w-10 h-10 border border-themeBorder rounded-none flex items-center justify-center text-lg text-themeText hover:text-themeRed hover:border-themeRed hover:shadow-[0_0_10px_var(--primary-red)] transition-all focus:outline-none bg-themeCard" title="Open Root Terminal" aria-label="Open Root Terminal">
+            <i class="bi bi-terminal"></i>
+          </button>
+          <button id="theme-switch" class="ui-interact w-10 h-10 border border-themeBorder rounded-none flex items-center justify-center text-lg text-themeText hover:text-themeYellow hover:border-themeYellow hover:shadow-[0_0_10px_var(--accent-yellow)] transition-all focus:outline-none bg-themeCard" title="Toggle Interface Mode" aria-label="Toggle Interface Mode">
+            <i class="bi bi-display hidden" data-icon="0"></i>
+            <i class="bi bi-exclamation-triangle hidden text-themeRed" data-icon="1"></i>
+            <i class="bi bi-code-square hidden text-themeYellow" data-icon="2"></i>
+          </button>
+          <button id="mobile-menu-btn" class="ui-interact lg:hidden text-3xl text-themeText hover:text-themeRed focus:outline-none" aria-label="Toggle navigation"><i class="bi bi-list"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="lg:hidden bg-themeCard border-t border-themeBorder" id="navbarNav">
+      <div class="px-4 pt-2 pb-6 space-y-1 text-center font-punchy">
+        <a class="ui-interact block text-lg text-themeText hover:text-themeBg hover:bg-themeRed py-3 border-b border-themeBorder/30 uppercase tracking-widest transition-colors" href="#manifesto">> Execute: Manifesto</a>
+        <a class="ui-interact block text-lg text-themeText hover:text-themeBg hover:bg-themeRed py-3 border-b border-themeBorder/30 uppercase tracking-widest transition-colors" href="#philosophy">> Execute: Philosophy</a>
+        <a class="ui-interact block text-lg text-themeText hover:text-themeBg hover:bg-themeRed py-3 border-b border-themeBorder/30 uppercase tracking-widest transition-colors" href="#tenets">> Execute: Protocol</a>
+        <a class="ui-interact block text-lg text-themeText hover:text-themeBg hover:bg-themeRed py-3 border-b border-themeBorder/30 uppercase tracking-widest transition-colors" href="#quotes">> Execute: Data_Logs</a>
+        <a class="ui-interact block text-lg text-themeText hover:text-themeBg hover:bg-themeRed py-3 border-b border-themeBorder/30 uppercase tracking-widest transition-colors" href="#follies">> Execute: Errors</a>
+        <a class="ui-interact block text-lg text-themeText hover:text-themeBg hover:bg-themeRed py-3 uppercase tracking-widest transition-colors" href="#newsletter">> Execute: Sync</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    
+    <header class="relative min-h-[75vh] flex items-center text-center pt-8 pb-16 overflow-hidden" role="banner">
+      <div class="absolute inset-0 bg-gradient-to-b from-themeBg/40 to-themeBg z-10 pointer-events-none"></div>
+      <canvas id="hero-canvas" class="absolute inset-0 w-full h-full z-0 opacity-60"></canvas>
+      
+      <div class="max-w-4xl mx-auto px-4 z-20 reveal-on-scroll content-relative border-l-4 border-r-4 border-themeRed py-8 bg-themeCard/50 backdrop-blur-sm shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+        <p class="font-punchy text-themeYellow tracking-[0.3em] mb-4 text-sm glitch-target">INITIALIZING TRUTH_PROTOCOL_V.400.BC...</p>
+        <h1 class="font-heading text-5xl md:text-7xl font-bold leading-tight mb-6 text-themeText uppercase drop-shadow-md glitch-target">
+          Radical Honesty,<br/> Real Freedom<br/>
+          <span class="text-themeRed sci-fi-glow-text">Cynicism Unlocked</span>
+        </h1>
+        <p class="text-lg md:text-xl mb-10 font-medium text-themeText/80 max-w-2xl mx-auto">
+          Discover the philosophy that cuts through illusion and empowers unfiltered living. For 2,500 years, Cynicism has stood for self-reliance, virtue, and the fearless search for truth.
+        </p>
+        <a href="#manifesto" class="ui-interact inline-block bg-transparent text-themeYellow border-2 border-themeYellow hover:bg-themeYellow hover:text-themeBg font-bold px-10 py-4 rounded-none uppercase tracking-[0.2em] transition-all shadow-[0_0_15px_var(--accent-yellow)] text-lg">
+          Unlearn_Untruth //
+        </a>
+      </div>
+    </header>
+
+    <div class="w-full border-y-2 border-themeBorder bg-themeCard py-3 relative z-20 overflow-hidden flex shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+        <div class="animate-data-stream text-themeRed/70 font-punchy text-xs sm:text-sm tracking-[0.3em]">
+            0x00A1F SYSTEM_ONLINE &nbsp;//&nbsp; 0x00B2C PROTOCOL_ACTIVE &nbsp;//&nbsp; 0x00C3D ILLUSION_DETECTED &nbsp;//&nbsp; 0x00D4E BYPASS_ENGAGED &nbsp;//&nbsp; 0x00E5F TRUTH_OVERRIDE &nbsp;//&nbsp; 0x00F6A AWAITING_INPUT &nbsp;//&nbsp; 
+            0x00A1F SYSTEM_ONLINE &nbsp;//&nbsp; 0x00B2C PROTOCOL_ACTIVE &nbsp;//&nbsp; 0x00C3D ILLUSION_DETECTED &nbsp;//&nbsp; 0x00D4E BYPASS_ENGAGED &nbsp;//&nbsp; 0x00E5F TRUTH_OVERRIDE &nbsp;//&nbsp; 0x00F6A AWAITING_INPUT &nbsp;//&nbsp;
+        </div>
+    </div>
+
+    <section id="manifesto" class="pt-16 pb-24 bg-themeBg transition-colors relative" tabindex="0">
+      <div class="hud-grid-overlay"></div>
+      <div class="max-w-3xl mx-auto px-4 reveal-on-scroll content-relative">
+        <h2 class="font-heading text-3xl md:text-5xl text-center uppercase mb-8 hud-header sci-fi-glow-text-yellow text-themeYellow glitch-target">The Cynic's Manifesto</h2>
+        <div class="space-y-6 bg-themeCard sci-fi-border p-8 tilt-card">
+          <p class="text-base md:text-lg leading-relaxed text-themeText/90">Tired of curated realities and borrowed opinions? Cynicism returns focus to authenticity—virtue, reason, and true independence—rejecting conformity for self-sufficiency.</p>
+          <blockquote class="font-punchy text-lg md:text-2xl text-themeBg bg-themeRed border-l-8 border-themeYellow pl-6 py-4 my-8 shadow-[0_0_20px_var(--primary-red)] glitch-target leading-relaxed">
+            "The Cynic is free because they want nothing that can be taken away."
+            <footer class="block text-right text-sm font-bold mt-4 uppercase tracking-widest text-themeBg/80">— Ancient Cynicism</footer>
+          </blockquote>
+          <ul class="space-y-4 font-punchy tracking-wide text-base md:text-lg text-themeText/90">
+            <li class="flex items-start"><span class="text-themeRed mr-3">></span> <span><strong class="text-themeYellow">Live by virtue:</strong> Build character, not reputation.</span></li>
+            <li class="flex items-start"><span class="text-themeRed mr-3">></span> <span><strong class="text-themeYellow">Question everything:</strong> Defy the easy answers and clichés.</span></li>
+            <li class="flex items-start"><span class="text-themeRed mr-3">></span> <span><strong class="text-themeYellow">Find strength in simplicity:</strong> True wealth comes from having less to lose.</span></li>
+          </ul>
+          <p class="border-t border-themeBorder border-dashed pt-4 text-themeText/90 text-sm md:text-base font-punchy uppercase leading-relaxed">STATUS: A Cynic's life is freedom: from opinion, desire, and fear. Choose what matters.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="philosophy" class="py-24 bg-themeCard transition-colors border-y border-themeBorder">
+      <div class="max-w-6xl mx-auto px-4 content-relative">
+        <h2 class="font-heading text-3xl md:text-5xl text-center uppercase mb-12 reveal-on-scroll hud-header text-themeText glitch-target"><span class="text-themeRed sci-fi-glow-text">2,500 Years</span> Of Skeptical Wisdom</h2>
+        <div class="flex flex-col lg:flex-row items-stretch gap-8 bg-themeBg p-6 border-2 border-themeBorder reveal-on-scroll relative overflow-hidden shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]">
+          <div class="absolute inset-0 opacity-10 pointer-events-none hud-grid"></div>
+          <div class="lg:w-1/2 space-y-6 w-full content-relative flex flex-col">
+            <span class="block text-xl md:text-2xl font-punchy text-themeYellow uppercase tracking-widest border-b border-themeBorder pb-4">> "Virtue alone is enough."</span>
+            <p class="text-base md:text-lg leading-relaxed font-body text-themeText/90">Diogenes carried his lantern, seeking an honest person among the crowd. Today, Cynicism shields us from false promises and manipulative trends.</p>
+            <ul class="space-y-4 text-sm md:text-base font-punchy uppercase tracking-wide flex-grow text-themeText/90">
+              <li class="flex items-center bg-themeCard p-3 border-l-2 border-themeRed"><i class="bi bi-shield-check text-themeRed text-xl mr-4"></i> Champion virtue, not popularity</li>
+              <li class="flex items-center bg-themeCard p-3 border-l-2 border-themeYellow"><i class="bi bi-tree text-themeYellow text-xl mr-4"></i> Embrace nature over custom</li>
+              <li class="flex items-center bg-themeCard p-3 border-l-2 border-themeText"><i class="bi bi-question-circle text-themeText text-xl mr-4"></i> Boldly challenge the status quo</li>
+            </ul>
+            <div id="timeline-wrapper" class="mt-4 p-2 bg-themeBg border-2 border-themeBorder relative transition-all duration-300 w-full shadow-sm group">
+              <button id="fs-toggle-btn" class="ui-interact absolute bottom-4 right-4 z-50 text-themeYellow hover:bg-themeYellow hover:text-themeBg transition-colors focus:outline-none text-xl bg-themeCard border border-themeYellow p-2 opacity-80 hover:opacity-100 shadow-[0_0_10px_var(--accent-yellow)]"><i class="bi bi-arrows-fullscreen"></i></button>
+              <h4 class="font-punchy text-sm uppercase text-themeText/50 mb-2 px-2 pt-1 glitch-target">DATA_STREAM: Timeline of Thought</h4>
+              <div id="philosophy-timeline" class="w-full h-[250px] relative z-10"></div>
+            </div>
+          </div>
+          <div class="lg:w-1/2 text-center w-full content-relative flex flex-col">
+            <div class="relative flex-grow h-[300px] lg:h-auto border-2 border-themeBorder p-2 bg-themeCard">
+                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80" alt="Imagery" class="w-full h-full object-cover cyber-img" />
+                <div class="absolute top-4 left-4 font-punchy text-xs text-themeRed bg-themeBg/80 px-2 py-1 border border-themeRed animate-pulse">REC //</div>
+            </div>
+            <p class="mt-4 text-base md:text-lg font-punchy uppercase tracking-widest text-themeText bg-themeCard border border-themeBorder p-4 leading-relaxed">
+              "I am looking for an honest man." <br /><span class="font-bold text-themeRed mt-2 block">> Diogenes</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tenets" class="py-24 bg-themeBg transition-colors relative">
+      <div class="hud-grid-overlay"></div>
+      <div class="max-w-6xl mx-auto px-4 content-relative">
+        <h2 class="font-heading text-3xl md:text-5xl text-center uppercase mb-12 reveal-on-scroll hud-header text-themeText glitch-target">Protocol: Code Of The Cynics</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="sci-fi-border bg-themeCard p-8 reveal-on-scroll relative overflow-hidden group tilt-card">
+            <div class="absolute -right-4 -top-4 text-[8rem] opacity-5 text-themeRed group-hover:scale-110 transition-transform font-punchy leading-none">01</div>
+            <h3 class="font-heading text-xl uppercase mb-4 flex flex-col items-start gap-4 relative z-10 border-b border-themeBorder pb-4 glitch-target"><i class="bi bi-cpu text-4xl text-themeRed sci-fi-glow-text"></i> Self-Sufficiency</h3>
+            <p class="text-base font-punchy tracking-wide text-themeText/90 relative z-10 leading-relaxed">Seek contentment from within—not from possessions, approval, or praise. External validation is a system error.</p>
+          </div>
+          <div class="sci-fi-border bg-themeCard p-8 reveal-on-scroll relative overflow-hidden group tilt-card" style="transition-delay: 100ms;">
+            <div class="absolute -right-4 -top-4 text-[8rem] opacity-5 text-themeYellow group-hover:scale-110 transition-transform font-punchy leading-none">02</div>
+            <h3 class="font-heading text-xl uppercase mb-4 flex flex-col items-start gap-4 relative z-10 border-b border-themeBorder pb-4 glitch-target"><i class="bi bi-eye text-4xl text-themeYellow sci-fi-glow-text-yellow"></i> Radical Honesty</h3>
+            <p class="text-base font-punchy tracking-wide text-themeText/90 relative z-10 leading-relaxed">Speak plainly, act transparently, and never shy away from truth. Bypass societal obfuscation filters.</p>
+          </div>
+          <div class="sci-fi-border bg-themeCard p-8 reveal-on-scroll relative overflow-hidden group tilt-card" style="transition-delay: 200ms;">
+            <div class="absolute -right-4 -top-4 text-[8rem] opacity-5 text-themeRed group-hover:scale-110 transition-transform font-punchy leading-none">03</div>
+            <h3 class="font-heading text-xl uppercase mb-4 flex flex-col items-start gap-4 relative z-10 border-b border-themeBorder pb-4 glitch-target"><i class="bi bi-shield-slash text-4xl text-themeRed sci-fi-glow-text"></i> Courage</h3>
+            <p class="text-base font-punchy tracking-wide text-themeText/90 relative z-10 leading-relaxed">Defy pressure to conform and question fearlessly. Stand firm against corrupt mainframe directives.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quotes" class="py-24 bg-themeCard transition-colors border-y border-themeBorder relative">
+      <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background: repeating-linear-gradient(45deg, var(--bs-body-color) 0, var(--bs-body-color) 2px, transparent 2px, transparent 10px);"></div>
+      <div class="max-w-7xl mx-auto px-4 content-relative">
+        <h2 class="font-heading text-3xl md:text-5xl text-center uppercase mb-12 reveal-on-scroll hud-header text-themeText glitch-target">Extracted Data_Logs</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="bg-themeBg sci-fi-border border-l-4 border-l-themeYellow p-6 flex flex-col reveal-on-scroll tilt-card">
+            <div class="font-heading text-xl text-themeRed uppercase tracking-widest">Diogenes</div>
+            <blockquote class="text-base md:text-lg font-body my-4 flex-grow text-themeText/90 leading-relaxed">"He has the most who is most content with the least."</blockquote>
+            <footer class="text-sm font-punchy uppercase border-t border-dashed border-themeBorder pt-3 mt-auto text-themeYellow leading-relaxed">> Freedom isn't having more, it's needing less.</footer>
+          </div>
+          <div class="bg-themeBg sci-fi-border border-l-4 border-l-themeYellow p-6 flex flex-col reveal-on-scroll tilt-card">
+            <div class="font-heading text-xl text-themeRed uppercase tracking-widest">Epictetus</div>
+            <blockquote class="text-base md:text-lg font-body my-4 flex-grow text-themeText/90 leading-relaxed">"It is not what happens to you, but how you react to it that matters."</blockquote>
+            <footer class="text-sm font-punchy uppercase border-t border-dashed border-themeBorder pt-3 mt-auto text-themeYellow leading-relaxed">> Response protocol dictates reality.</footer>
+          </div>
+          <div class="bg-themeBg sci-fi-border border-l-4 border-l-themeRed p-6 flex flex-col reveal-on-scroll tilt-card">
+            <div class="font-heading text-xl text-themeYellow uppercase tracking-widest">Karl Marx</div>
+            <blockquote class="text-base md:text-lg font-body my-4 flex-grow text-themeText/90 leading-relaxed">"The philosophers have only interpreted the world; the point is to change it."</blockquote>
+            <footer class="text-sm font-punchy uppercase border-t border-dashed border-themeBorder pt-3 mt-auto text-themeRed leading-relaxed">> True cynicism dismantles corrupt infrastructure.</footer>
+          </div>
+          <div class="bg-themeBg sci-fi-border border-l-4 border-l-themeRed p-6 flex flex-col reveal-on-scroll tilt-card">
+            <div class="font-heading text-xl text-themeYellow uppercase tracking-widest">Rosa Luxemburg</div>
+            <blockquote class="text-base md:text-lg font-body my-4 flex-grow text-themeText/90 leading-relaxed">"Those who do not move, do not notice their chains."</blockquote>
+            <footer class="text-sm font-punchy uppercase border-t border-dashed border-themeBorder pt-3 mt-auto text-themeRed leading-relaxed">> System stasis masks control algorithms.</footer>
+          </div>
+          <div class="bg-themeBg sci-fi-border border-l-4 border-l-themeRed p-6 flex flex-col reveal-on-scroll tilt-card">
+            <div class="font-heading text-xl text-themeYellow uppercase tracking-widest">Slavoj Žižek</div>
+            <blockquote class="text-base md:text-lg font-body my-4 flex-grow text-themeText/90 leading-relaxed">"It is easier to imagine the end of the world than to imagine the end of capitalism."</blockquote>
+            <footer class="text-sm font-punchy uppercase border-t border-dashed border-themeBorder pt-3 mt-auto text-themeRed leading-relaxed">> Base paradigm limits predictive modeling. Override required.</footer>
+          </div>
+          <div class="bg-themeBg sci-fi-border border-l-4 border-l-themeRed p-6 flex flex-col reveal-on-scroll tilt-card">
+            <div class="font-heading text-xl text-themeYellow uppercase tracking-widest">Friedrich Engels</div>
+            <blockquote class="text-base md:text-lg font-body my-4 flex-grow text-themeText/90 leading-relaxed">"An ounce of action is worth a ton of theory."</blockquote>
+            <footer class="text-sm font-punchy uppercase border-t border-dashed border-themeBorder pt-3 mt-auto text-themeRed leading-relaxed">> Execution phase holds higher value than compilation.</footer>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="follies" class="py-24 bg-themeBg transition-colors relative">
+      <div class="hud-grid-overlay"></div>
+      <div class="max-w-6xl mx-auto px-4 content-relative">
+        <h2 class="font-heading text-3xl md:text-5xl text-center uppercase mb-12 reveal-on-scroll hud-header text-themeText glitch-target">System Errors: Modern Follies</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="sci-fi-border bg-themeCard p-6 flex flex-col h-full reveal-on-scroll border-l-2 border-l-themeRed tilt-card">
+            <h4 class="font-punchy text-xl text-themeRed mb-2 uppercase glitch-target"><i class="bi bi-x-circle mr-2"></i> Error: Chasing Validation</h4>
+            <p class="mb-4 flex-grow font-body text-base md:text-lg text-themeText/90 leading-relaxed">Modern society teaches us to value likes, awards, and applause over character.</p>
+            <div class="font-punchy text-sm md:text-base uppercase bg-themeRed/10 border border-themeRed p-3 text-themeRed">> Fix: What matters cannot be measured by the crowd.</div>
+          </div>
+          <div class="sci-fi-border bg-themeCard p-6 flex flex-col h-full reveal-on-scroll border-l-2 border-l-themeRed tilt-card">
+            <h4 class="font-punchy text-xl text-themeRed mb-2 uppercase glitch-target"><i class="bi bi-x-circle mr-2"></i> Error: Hyper-Consumerism</h4>
+            <p class="mb-4 flex-grow font-body text-base md:text-lg text-themeText/90 leading-relaxed">We're sold comfort and happiness for a price—yet dissatisfaction grows, not shrinks.</p>
+            <div class="font-punchy text-sm md:text-base uppercase bg-themeRed/10 border border-themeRed p-3 text-themeRed">> Fix: Less is more. Freedom comes from needing less.</div>
+          </div>
+          <div class="sci-fi-border bg-themeCard p-6 flex flex-col h-full reveal-on-scroll border-l-2 border-l-themeRed tilt-card">
+            <h4 class="font-punchy text-xl text-themeRed mb-2 uppercase glitch-target"><i class="bi bi-x-circle mr-2"></i> Error: Performative Outrage</h4>
+            <p class="mb-4 flex-grow font-body text-base md:text-lg text-themeText/90 leading-relaxed">Outrage has become currency, often masking real apathy and change avoidance.</p>
+            <div class="font-punchy text-sm md:text-base uppercase bg-themeRed/10 border border-themeRed p-3 text-themeRed">> Fix: Change begins with truth, not display.</div>
+          </div>
+          <div class="sci-fi-border bg-themeCard p-6 flex flex-col h-full reveal-on-scroll border-l-2 border-l-themeRed tilt-card">
+            <h4 class="font-punchy text-xl text-themeRed mb-2 uppercase glitch-target"><i class="bi bi-x-circle mr-2"></i> Error: Brand Worship</h4>
+            <p class="mb-4 flex-grow font-body text-base md:text-lg text-themeText/90 leading-relaxed">We value labels and tribes over reality—mistaking branding for belonging.</p>
+            <div class="font-punchy text-sm md:text-base uppercase bg-themeRed/10 border border-themeRed p-3 text-themeRed">> Fix: Belong to truth, not a logo.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="newsletter" class="py-24 border-t border-themeBorder transition-colors relative overflow-hidden bg-themeCard">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--primary-red)_0%,transparent_50%)] opacity-10 animate-pulse"></div>
+      <div class="max-w-3xl mx-auto px-4 text-center reveal-on-scroll content-relative">
+        <h2 class="font-heading text-4xl md:text-5xl uppercase mb-6 hud-header glitch-target">Uplink: The Reality</h2>
+        <p class="text-base md:text-lg mb-8 font-body text-themeText/90 leading-relaxed">Join our quest for clarity: Reality isn’t consensus—it’s discovered by questioning. Sign up for fresh insights and raw data streams.</p>
+        <form class="flex flex-col sm:flex-row justify-center gap-4">
+          <input type="email" class="ui-interact w-full sm:w-2/3 px-6 py-4 rounded-none border-2 border-themeBorder bg-themeBg text-themeText font-punchy placeholder-themeText/30 focus:outline-none focus:border-themeYellow focus:shadow-[0_0_15px_var(--accent-yellow)] transition-all text-base" placeholder="USER@DOMAIN.COM" required />
+          <button type="submit" class="ui-interact bg-themeRed hover:bg-transparent border-2 border-themeRed text-white hover:text-themeRed font-punchy text-base md:text-lg uppercase tracking-widest px-8 py-4 rounded-none shadow-[0_0_15px_var(--primary-red)] transition-all">Initialize</button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bg-themeBg text-themeText py-10 border-t-2 border-themeBorder transition-colors text-center relative z-20">
+    <div class="container mx-auto px-4 font-punchy tracking-widest text-xs md:text-sm text-themeText/50 leading-relaxed">
+      SYS.LOG // CLICK [ >_ ] TO ACCESS ROOT TERMINAL // TAP SYS_CORE LOGO TO HYPER-SCROLL // &copy; 2026 THE CYNIC'S LANTERN.
+    </div>
+  </footer>
+
+  <div id="terminal-overlay" class="fixed inset-0 z-[9999999] hidden flex-col p-6 font-punchy overflow-y-auto" style="background-color: #050505; background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.05) 2px, rgba(0,255,0,0.05) 4px);">
+      <div class="scanlines"></div>
+      <div id="terminal-output" class="flex-grow whitespace-pre-wrap terminal-text text-[#33ff33] text-sm md:text-base">CYNIC_OS [Version 400.BC]
+(c) 2026 Radical Honesty Systems. All rights reserved.
+Warning: GUI bypass detected.
+Type 'help' to view available operations.
+</div>
+      <div class="flex items-center mt-2 terminal-text text-[#33ff33] bg-black relative z-10 text-sm md:text-base">
+          <span class="mr-2">C:\CYNIC></span>
+          <input type="text" id="terminal-input" class="bg-transparent border-none outline-none flex-grow text-[#33ff33] terminal-text uppercase" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+
+      // --- WEB AUDIO API ---
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      const audioCtx = new AudioContext();
+
+      function playUiHover() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+      }
+
+      function playUiClick() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+      }
+
+      function playKonamiZap() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+      }
+
+      $('.ui-interact').on('mouseenter', playUiHover);
+      $('.ui-interact').on('click', playUiClick);
+      $(document).on('click keydown', function() { if (audioCtx.state === 'suspended') audioCtx.resume(); });
+
+      // --- THE COOKIE BANNER ---
+      if (!localStorage.getItem('cynic_cookie_acknowledged')) {
+          $('#cynic-cookie-banner').removeClass('hidden').hide().slideDown(500);
+      }
+      $('#dismiss-cookie').on('click', function() {
+          localStorage.setItem('cynic_cookie_acknowledged', 'true');
+          $('#cynic-cookie-banner').slideUp(300);
+      });
+
+      // --- PRIVACY SHIELD DETECTION ---
+      let privacyShieldActive = false;
+      fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', { method: 'HEAD', mode: 'no-cors', cache: 'no-store' })
+        .then(() => { privacyShieldActive = false; })
+        .catch(() => { privacyShieldActive = true; });
+
+      // --- 3D CARD TILT (Desktop Only) ---
+      if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+          $('.tilt-card').on('mousemove', function(e) {
+              const rect = this.getBoundingClientRect();
+              const x = e.clientX - rect.left; 
+              const y = e.clientY - rect.top;
+              const centerX = rect.width / 2; 
+              const centerY = rect.height / 2;
+              
+              const rotateX = ((y - centerY) / centerY) * -8; 
+              const rotateY = ((x - centerX) / centerX) * 8;
+              
+              $(this).css({
+                  'transform': `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`,
+                  'box-shadow': `${-rotateY}px ${rotateX}px 20px rgba(0, 243, 255, 0.2)`
+              });
+          }).on('mouseleave', function() {
+              $(this).css({
+                  'transform': 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
+                  'box-shadow': 'none'
+              });
+          });
+      }
+
+      // --- WEBGL/CANVAS PARTICLE BACKGROUND ---
+      const canvas = document.getElementById('hero-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      let mouse = { x: null, y: null, radius: 150 };
+
+      function resizeCanvas() {
+          canvas.width = canvas.offsetWidth;
+          canvas.height = canvas.offsetHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      canvas.addEventListener('mousemove', function(event) {
+          const rect = canvas.getBoundingClientRect();
+          mouse.x = event.clientX - rect.left;
+          mouse.y = event.clientY - rect.top;
+      });
+      canvas.addEventListener('mouseout', function() { mouse.x = null; mouse.y = null; });
+
+      class Particle {
+          constructor(x, y, dx, dy, size) {
+              this.x = x; this.y = y; this.dx = dx; this.dy = dy; this.size = size;
+          }
+          draw() {
+              ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+              ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--border-color').trim();
+              ctx.fill();
+          }
+          update() {
+              if (this.x > canvas.width || this.x < 0) this.dx = -this.dx;
+              if (this.y > canvas.height || this.y < 0) this.dy = -this.dy;
+              
+              if (mouse.x != null) {
+                  let dx = mouse.x - this.x; let dy = mouse.y - this.y;
+                  let distance = Math.sqrt(dx * dx + dy * dy);
+                  if (distance < mouse.radius) {
+                      this.x -= dx / 20; this.y -= dy / 20;
+                  }
+              }
+              this.x += this.dx; this.y += this.dy;
+              this.draw();
+          }
+      }
+
+      function initParticles() {
+          particles = [];
+          let numberOfParticles = (canvas.height * canvas.width) / 9000;
+          for (let i = 0; i < numberOfParticles; i++) {
+              let size = Math.random() * 2 + 1;
+              let x = Math.random() * canvas.width; let y = Math.random() * canvas.height;
+              let dx = (Math.random() - 0.5) * 1; let dy = (Math.random() - 0.5) * 1;
+              particles.push(new Particle(x, y, dx, dy, size));
+          }
+      }
+      
+      function animateParticles() {
+          requestAnimationFrame(animateParticles);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          let themeColor = getComputedStyle(document.body).getPropertyValue('--border-color').trim();
+          
+          for (let i = 0; i < particles.length; i++) {
+              particles[i].update();
+              for (let j = i; j < particles.length; j++) {
+                  let distance = Math.sqrt(Math.pow(particles[i].x - particles[j].x, 2) + Math.pow(particles[i].y - particles[j].y, 2));
+                  if (distance < 100) {
+                      ctx.beginPath();
+                      ctx.strokeStyle = themeColor;
+                      ctx.globalAlpha = 1 - (distance / 100);
+                      ctx.lineWidth = 1;
+                      ctx.moveTo(particles[i].x, particles[i].y);
+                      ctx.lineTo(particles[j].x, particles[j].y);
+                      ctx.stroke();
+                      ctx.globalAlpha = 1;
+                  }
+              }
+          }
+      }
+      initParticles(); animateParticles();
+
+      // --- Smooth Scrolling with Re-Animation Trigger ---
+      $('a[href^="#"]').on('click', function(event) {
+        var target = $(this.getAttribute('href'));
+        if( target.length && !$(this).hasClass('skip-link') ) {
+          event.preventDefault();
+          var offsetTop = target.offset().top;
+          
+          if ($('#navbarNav').is(':visible') && $(window).width() < 1024) {
+            offsetTop -= $('#navbarNav').outerHeight();
+            $('#navbarNav').slideUp(300);
+          }
+          
+          // Slower scroll (800ms) with a complete callback to re-trigger the glitch
+          $('html, body').stop().animate({ scrollTop: offsetTop - 64 }, 800).promise().done(function() {
+              // Pause briefly (300ms) before glitching so user actually sees it
+              setTimeout(function() {
+                  const $glitchTargets = $(target).find('.glitch-target');
+                  if ($glitchTargets.length) {
+                      $glitchTargets.removeClass('glitch-active');
+                      $glitchTargets.each(function() { void this.offsetWidth; }); 
+                      $glitchTargets.addClass('glitch-active');
+                      setTimeout(() => { $glitchTargets.removeClass('glitch-active'); }, 800);
+                  }
+              }, 300);
+          });
+        }
+      });
+
+      $('#mobile-menu-btn').on('click', function() { $('#navbarNav').slideToggle(300); });
+
+      $(window).scroll(function() {
+        if ($(this).scrollTop() > 300) { $('#scrollTopBtn').fadeIn(300).css("display","flex"); } 
+        else { $('#scrollTopBtn').fadeOut(300); }
+      });
+      $('#scrollTopBtn').click(function() { $('html, body').animate({scrollTop : 0}, 600); return false; });
+
+      // --- ADVANCED GLITCH OBSERVER ---
+      const observerOptions = { root: null, rootMargin: '0px 0px -15% 0px', threshold: 0.10 };
+      const scrollObserver = new IntersectionObserver(function(entries, observer) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            $(entry.target).addClass('is-visible');
+            setTimeout(() => { $(entry.target).addClass('glitch-active'); }, 400);
+            setTimeout(() => { $(entry.target).removeClass('glitch-active'); }, 1200);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+
+      $('.reveal-on-scroll').each(function() { scrollObserver.observe(this); });
+
+      // --- VIS.JS TIMELINE ---
+      const timelineContainer = document.getElementById('philosophy-timeline');
+      const items = new vis.DataSet([
+        { id: 1, content: '<span class="font-bold text-xs sm:text-sm tracking-widest text-themeYellow">ANTISTHENES</span><br><span class="text-[10px] sm:text-xs opacity-80">> PRECURSOR</span>', start: '-0445', end: '-0365' },
+        { id: 2, content: '<span class="font-bold text-xs sm:text-sm tracking-widest text-themeRed">DIOGENES</span><br><span class="text-[10px] sm:text-xs opacity-80">> THE DOG</span>', start: '-0412', end: '-0323' },
+        { id: 3, content: '<span class="font-bold text-xs sm:text-sm tracking-widest text-themeYellow">CRATES</span><br><span class="text-[10px] sm:text-xs opacity-80">> DOOR-OPENER</span>', start: '-0365', end: '-0285' },
+        { id: 4, content: '<span class="font-bold text-xs sm:text-sm tracking-widest text-themeYellow">HIPPARCHIA</span><br><span class="text-[10px] sm:text-xs opacity-80">> FEMALE CYNIC</span>', start: '-0350', end: '-0280' },
+        { id: 5, content: '<span class="font-bold text-xs sm:text-sm tracking-widest text-themeYellow">EPICTETUS</span><br><span class="text-[10px] sm:text-xs opacity-80">> STOIC_SYNC</span>', start: '0050', end: '0135' },
+        { id: 6, content: '<span class="font-bold text-xs sm:text-sm tracking-widest text-themeRed">MODERN_ERA</span><br><span class="text-[10px] sm:text-xs opacity-80">> STRUCT. CRITIQUE</span>', start: '1850', end: '2026' }
+      ]);
+      const options = {
+        height: '100%', start: '-0500', end: '2100', zoomMin: 1000 * 60 * 60 * 24 * 365 * 50,
+        type: 'box', showCurrentTime: false, tooltip: { followMouse: true }, margin: { item: 15, axis: 10 }, stack: true
+      };
+      const timeline = new vis.Timeline(timelineContainer, items, options);
+
+      $('#fs-toggle-btn').on('click', function(e) {
+        e.stopPropagation();
+        const wrapper = $('#timeline-wrapper');
+        const icon = $(this).find('i');
+        const parentReveal = wrapper.closest('.reveal-on-scroll'); 
+        
+        if (!wrapper.hasClass('timeline-fullscreen')) {
+            $('<div id="timeline-placeholder"></div>').css({
+                height: wrapper.outerHeight() + 'px',
+                width: wrapper.outerWidth() + 'px',
+                marginBottom: wrapper.css('margin-bottom'),
+                marginTop: wrapper.css('margin-top')
+            }).insertAfter(wrapper);
+
+            wrapper.addClass('timeline-fullscreen').appendTo('body');
+            icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
+            $('body').css('overflow', 'hidden'); 
+            parentReveal.addClass('remove-transform');
+        } else {
+            wrapper.removeClass('timeline-fullscreen');
+            $('#timeline-placeholder').replaceWith(wrapper);
+            icon.removeClass('bi-fullscreen-exit').addClass('bi-arrows-fullscreen');
+            $('body').css('overflow', '');
+            parentReveal.removeClass('remove-transform');
+        }
+        setTimeout(function() { timeline.redraw(); }, 50);
+      });
+
+      // --- THEME SWITCHER ---
+      const themes = ['light', 'dark', 'manuscript'];
+      let currentThemeIndex = 0;
+      function updateIcons() {
+        $('#theme-switch i').addClass('hidden'); 
+        $(`#theme-switch i[data-icon="${currentThemeIndex}"]`).removeClass('hidden'); 
+      }
+      $('#theme-switch').on('click', function() {
+        currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+        $('html').attr('data-theme', themes[currentThemeIndex]);
+        updateIcons();
+        setTimeout(function() { timeline.redraw(); }, 50);
+      });
+      updateIcons();
+
+      // --- TERMINAL LOGIC ---
+      function openTerminal() {
+          playUiClick();
+          $('#terminal-overlay').removeClass('hidden').addClass('flex');
+          setTimeout(() => { $('#terminal-input').focus(); }, 100);
+          $('body').css('overflow', 'hidden');
+          
+          if(privacyShieldActive && !window.privacyLogged) {
+              $('#terminal-output').append('\n\nSYS.LOG // ENHANCED PRIVACY SHIELDS DETECTED.\nDNS-LEVEL BLOCKING OR CUSTOM USERSCRIPTS VERIFIED.\nCOMMENCING SECURE HANDSHAKE...\n');
+              window.privacyLogged = true;
+          }
+      }
+      
+      $('#terminal-btn').on('click', openTerminal);
+
+      // --- BRAND LOGO HYPERSCROLL ---
+      $('#brand-logo').on('click', function(e) {
+          e.preventDefault();
+          playKonamiZap();
+          $('html, body').stop().animate({ scrollTop: $('#philosophy').offset().top - 64 }, 1000);
+      });
+
+      // --- KEYBOARD EASTER EGGS ---
+      let truthBuffer = '';
+      const truthCode = 'TRUTH';
+      const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+      let konamiIndex = 0;
+      
+      $(document).on('keydown', function(e) {
+          if (e.key === 'Escape') {
+             if ($('#timeline-wrapper').hasClass('timeline-fullscreen')) { $('#fs-toggle-btn').click(); }
+             if (!$('#terminal-overlay').hasClass('hidden')) { 
+                 $('#terminal-overlay').removeClass('flex').addClass('hidden');
+                 $('body').css('overflow', '');
+             }
+             return;
+          }
+
+          if (e.target.tagName === 'INPUT' && e.target.id !== 'terminal-input' && e.target.type !== 'email') return;
+          
+          if (e.key.toLowerCase() === konamiCode[konamiIndex].toLowerCase() || e.key === konamiCode[konamiIndex]) {
+              konamiIndex++;
+              if (konamiIndex === konamiCode.length) {
+                  playKonamiZap();
+                  $('html, body').stop().animate({ scrollTop: $('#philosophy').offset().top - 64 }, 1000);
+                  konamiIndex = 0;
+              }
+          } else {
+              konamiIndex = 0;
+          }
+
+          if (!$('#terminal-overlay').hasClass('hidden')) return;
+
+          truthBuffer += e.key.toUpperCase();
+          if (truthBuffer.length > truthCode.length) truthBuffer = truthBuffer.slice(-truthCode.length);
+          
+          if (truthBuffer === truthCode) {
+              openTerminal();
+              truthBuffer = ''; 
+          }
+      });
+
+      $('#terminal-overlay').on('click', function() { $('#terminal-input').focus(); });
+
+      $('#terminal-input').on('keydown', function(e) {
+          if (e.key === 'Enter') {
+              const cmd = $(this).val().trim().toLowerCase();
+              $(this).val('');
+              let output = `\nC:\\CYNIC> ${cmd.toUpperCase()}\n`;
+              
+              switch(cmd) {
+                  case 'help': output += "COMMANDS DETECTED:\n  HELP    - DISPLAY THIS MESSAGE\n  STATUS  - CHECK SYSTEM INTEGRITY\n  WIPE    - EXECUTE DELUSION PURGE\n  RESTORE - REBOOT GUI\n  EXIT    - TERMINATE SESSION"; break;
+                  case 'status': output += "WARNING: 98% OF EXTERNAL REALITY DESIGNATED AS 'ILLUSION'.\nVIRTUE NODE ACTIVE.\nCONSUMER.EXE IS LEAKING MEMORY."; break;
+                  case 'wipe':
+                  case 'sudo rm -rf /delusions':
+                      output += "ERASING DELUSIONS...\nGUI PURGED. WELCOME TO THE DESERT OF THE REAL.";
+                      $('nav, main, footer, .scanlines').fadeOut(1500); 
+                      $('#scrollTopBtn').fadeOut(1500);
+                      break;
+                  case 'restore':
+                      output += "REBOOTING SYSTEM GUI...";
+                      $('nav, main, footer, .scanlines').fadeIn(1500); 
+                      if ($(window).scrollTop() > 300) { $('#scrollTopBtn').fadeIn(1500); }
+                      break;
+                  case 'clear':
+                      $('#terminal-output').html("CYNIC_OS [Version 400.BC]\n(c) 2026 Radical Honesty Systems. All rights reserved.\n"); return;
+                  case 'exit':
+                      $('#terminal-overlay').removeClass('flex').addClass('hidden');
+                      $('body').css('overflow', ''); return;
+                  case '': output = `\nC:\\CYNIC> `; break;
+                  default: output += `'${cmd}' IS NOT RECOGNIZED AS AN INTERNAL COMMAND.\nSYSTEM ADVISES YOU TO QUESTION YOUR INPUT.`;
+              }
+              
+              $('#terminal-output').append(output);
+              $('#terminal-overlay').scrollTop($('#terminal-overlay')[0].scrollHeight);
+          }
+      });
+    });
+  </script>
+</body>
+</html>
