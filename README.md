@@ -1,6 +1,9 @@
 # CYNIC_OS [V.400.BC]
 
 > *"The most useful piece of learning for the uses of life is to unlearn what is untrue."* — Antisthenes
+>
+> **[ ACCESS LIVE MAINFRAME: https://cynic.gq ](https://cynic.gq)**
+
 
 [![Deploy Status](https://img.shields.io/badge/Deployment-Offline_Capable-00f3ff?style=for-the-badge&logo=github)](https://github.com)
 [![Privacy](https://img.shields.io/badge/Tracking-Zero-ff0055?style=for-the-badge)](https://github.com)
