@@ -1,7 +1,8 @@
 # CYNIC_OS [V.400.BC]
 
 > *"The most useful piece of learning for the uses of life is to unlearn what is untrue."* — Antisthenes
->
+
+
 > **[ ACCESS LIVE MAINFRAME: https://cynic.gq ](https://cynic.gq)**
 
 
