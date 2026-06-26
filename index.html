@@ -130,6 +130,20 @@
     @media (min-width: 1024px) { #navbarNav { display: flex !important; } }
     .cyber-img { filter: contrast(1.2) saturate(1.5) hue-rotate(180deg) brightness(0.8); mix-blend-mode: luminosity; border: 1px solid var(--border-color); }
   </style>
+
+  
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').then(reg => {
+          console.log('SYS.LOG // SERVICE WORKER ACTIVE');
+        }).catch(err => console.error('SW Error:', err));
+      });
+    }
+  </script>
+  
+  
 </head>
 <body class="font-body antialiased overflow-x-hidden selection:bg-themeYellow selection:text-black transition-opacity duration-1000" id="site-wrapper">
 
