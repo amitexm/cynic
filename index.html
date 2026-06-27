@@ -131,17 +131,27 @@
     .cyber-img { filter: contrast(1.2) saturate(1.5) hue-rotate(180deg) brightness(0.8); mix-blend-mode: luminosity; border: 1px solid var(--border-color); }
   </style>
 
-  
+
+  <!-- THE SERVICE WORKER REGISTRATION SCRIPT-->
   <link rel="manifest" href="manifest.json">
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(reg => {
-          console.log('SYS.LOG // SERVICE WORKER ACTIVE');
-        }).catch(err => console.error('SW Error:', err));
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+          // Visual Success Indicator!
+          setTimeout(() => {
+             $('#brand-logo').append('<span class="text-[8px] font-punchy text-themeYellow absolute -right-8 top-0 border border-themeYellow px-1 tracking-widest shadow-[0_0_5px_var(--accent-yellow)]">PWA:ON</span>');
+          }, 1000);
+        }).catch(err => {
+          // Visual Error Indicator
+          setTimeout(() => {
+             $('#brand-logo').append('<span class="text-[8px] font-punchy text-themeRed absolute -right-10 top-0 border border-themeRed px-1 tracking-widest">PWA:ERR</span>');
+          }, 1000);
+        });
       });
     }
   </script>
+
   
   
 </head>
