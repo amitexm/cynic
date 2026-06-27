@@ -1,8 +1,14 @@
-const CACHE_NAME = 'cynicos-cache-v2';
+const CACHE_NAME = 'cynicos-cache-v3';
 
-// Explicitly cache index.html (removed the ambiguous './' path)
-const ASSETS_TO_CACHE = [
-  'index.html',
+// Core assets that MUST cache for the site to load
+const CORE_ASSETS = [
+  './',
+  './index.html',
+  './manifest.json'
+];
+
+// External assets (We will try to cache these, but won't let them crash the install if they fail)
+const EXTERNAL_ASSETS = [
   'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css',
   'https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600&family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap',
   'https://unpkg.com/vis-timeline/standalone/umd/vis-timeline-graph2d.min.css',
@@ -11,15 +17,20 @@ const ASSETS_TO_CACHE = [
   'https://code.jquery.com/jquery-3.7.1.min.js'
 ];
 
-// Install Event: Cache everything and force activation
+// INSTALL: Force wait skip, safely cache local files first
 self.addEventListener('install', event => {
-  self.skipWaiting(); // Force the waiting service worker to become the active one
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
+    caches.open(CACHE_NAME).then(cache => {
+      // First, guarantee the core files are cached
+      cache.addAll(CORE_ASSETS);
+      // Then try the external files, but catch any errors so it doesn't abort the SW
+      return cache.addAll(EXTERNAL_ASSETS).catch(err => console.warn('External cache skip:', err));
+    })
   );
 });
 
-// Activate Event: Purge old illusions (v1 cache)
+// ACTIVATE: Purge any old, broken caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -28,23 +39,22 @@ self.addEventListener('activate', event => {
           if (cache !== CACHE_NAME) return caches.delete(cache);
         })
       );
-    }).then(() => self.clients.claim()) // Take control of all open pages immediately
+    }).then(() => self.clients.claim())
   );
 });
 
-// Fetch Event: The Aggressive Offline Fallback
+// FETCH: Aggressive Offline Fallback
 self.addEventListener('fetch', event => {
   event.respondWith(
-    // 1. Try to find an exact match in the cache
     caches.match(event.request, { ignoreSearch: true }).then(cachedResponse => {
+      // 1. Return cached version if found
       if (cachedResponse) return cachedResponse;
       
-      // 2. If not in cache, try the network
+      // 2. Otherwise, fetch from network
       return fetch(event.request).catch(() => {
-        // 3. THE FIX: If the network fails (offline) AND the browser is trying 
-        // to load a webpage (navigate mode), force-serve the cached index.html
-        if (event.request.mode === 'navigate' || event.request.headers.get('accept').includes('text/html')) {
-          return caches.match('index.html');
+        // 3. IF OFFLINE: Force route all page navigations directly to the cached index.html
+        if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
+          return caches.match('./index.html');
         }
       });
     })
