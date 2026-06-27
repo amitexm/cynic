@@ -1,7 +1,7 @@
 {
   "name": "The Cynic's Lantern",
   "short_name": "CynicOS",
-  "start_url": "./index.html",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#030811",
   "theme_color": "#ff0055",
