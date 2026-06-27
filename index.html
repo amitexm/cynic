@@ -159,8 +159,28 @@
 
   <div class="scanlines"></div>
 
+  
+    <!-- THE OFFLINE GATEKEEPER -->
+    <div id="connection-overlay" class="fixed inset-0 z-[99999999] bg-[#030811] flex flex-col items-center justify-center p-6 text-center transition-opacity duration-[1500ms]">
+      <div class="scanlines"></div>
+      
+      <div id="pwa-status" class="absolute top-4 right-4 font-punchy text-xs uppercase tracking-widest text-themeText/30 border border-themeText/30 p-2 transition-colors duration-1000">SYS.STATE: UNVERIFIED</div>
+      
+      <i class="bi bi-wifi text-6xl text-themeRed mb-6 animate-pulse shadow-[0_0_15px_var(--primary-red)] rounded-full p-4 border-2 border-themeRed"></i>
+      <h2 class="font-heading text-3xl md:text-5xl uppercase mb-4 text-themeText sci-fi-glow-text">Network Detected</h2>
+      <p class="font-punchy text-lg text-themeYellow uppercase tracking-widest max-w-2xl mb-8 leading-relaxed relative z-10">
+        The mainframe is too loud. The illusions are streaming in. <br><br>
+        <span class="text-themeRed">> DIRECTIVE:</span> Disable your network connection to access the unvarnished truth.
+      </p>
+      
+      <div id="gatekeeper-status" class="text-themeText/50 font-punchy text-sm animate-pulse uppercase tracking-widest transition-colors duration-500 relative z-10">
+        Awaiting Offline Status...
+      </div>
+    </div>
 
-  <!-- THE OFFLINE GATEKEEPER -->
+
+
+  <!-- THE OFFLINE GATEKEEPER
   <div id="connection-blocker" class="fixed inset-0 z-[99999999] bg-[#030811] flex flex-col items-center justify-center p-6 text-center transition-opacity duration-1000">
       <div class="scanlines"></div>
       <i class="bi bi-wifi text-6xl text-themeRed mb-6 animate-pulse shadow-[0_0_15px_var(--primary-red)] rounded-full p-4 border-2 border-themeRed"></i>
@@ -173,6 +193,7 @@
         Awaiting Offline Status...
       </div>
   </div>
+  -->
 
   
 
