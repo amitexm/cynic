@@ -132,7 +132,7 @@
   </style>
 
 
-  <!-- THE SERVICE WORKER REGISTRATION SCRIPT-->
+  <!-- THE SERVICE WORKER REGISTRATION SCRIPT
   <link rel="manifest" href="manifest.json">
   <script>
     if ('serviceWorker' in navigator) {
@@ -150,7 +150,33 @@
         });
       });
     }
+  </script> -->
+
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+          setTimeout(() => {
+             const pwaStatus = document.getElementById('pwa-status');
+             if (pwaStatus) {
+                 pwaStatus.className = 'absolute top-4 right-4 font-punchy text-xs uppercase tracking-widest p-2 transition-colors duration-1000 text-themeYellow border border-themeYellow shadow-[0_0_5px_var(--accent-yellow)]';
+                 pwaStatus.innerText = 'LOCAL_NODE: ARMED';
+             }
+          }, 1000);
+        }).catch(err => {
+          setTimeout(() => {
+             const pwaStatus = document.getElementById('pwa-status');
+             if (pwaStatus) {
+                 pwaStatus.className = 'absolute top-4 right-4 font-punchy text-xs uppercase tracking-widest p-2 transition-colors duration-1000 text-themeRed border border-themeRed';
+                 pwaStatus.innerText = 'LOCAL_NODE: FAILED';
+             }
+          }, 1000);
+        });
+      });
+    }
   </script>
+
 
   
   
@@ -463,6 +489,7 @@ Type 'help' to view available operations.
 
 
       // --- THE OFFLINE GATEKEEPER LOGIC ---
+      /*
       const $blocker = $('#connection-blocker');
 
       function handleConnectionChange() {
@@ -490,6 +517,62 @@ Type 'help' to view available operations.
       // Listen for connection toggles
       window.addEventListener('online', handleConnectionChange);
       window.addEventListener('offline', handleConnectionChange);
+      */
+
+
+            // --- THE OFFLINE OVERLAY LOGIC ---
+      const $overlay = $('#connection-overlay');
+      const $gateStatus = $('#gatekeeper-status');
+      let isUnlocked = false; // Tracks if the user has already bypassed the gatekeeper this session
+
+      function handleConnectionChange(isInitialLoad = false) {
+          if (navigator.onLine) {
+              // If they already unlocked the site, ignore the fact that they reconnected to the internet.
+              if (isUnlocked) return;
+
+              // User is ONLINE and hasn't unlocked: Lock the screen
+              $overlay.removeClass('hidden').css('opacity', '1');
+              $('body').css('overflow', 'hidden'); 
+              $gateStatus.text('Awaiting Offline Status...').addClass('animate-pulse').removeClass('text-themeYellow');
+          } else {
+              // User is OFFLINE: Grant access and set unlocked state permanently for this session
+              isUnlocked = true;
+              
+              if (isInitialLoad) {
+                  // If they reload while already offline, skip the dramatic animation
+                  $overlay.addClass('hidden').css('opacity', '0');
+                  $('body').css('overflow', ''); 
+                  if(!window.offlineLogged) {
+                      $('#terminal-output').append('\n\nSYS.LOG // NETWORK DISCONNECTED. ILLUSIONS BLOCKED.\nWELCOME TO THE DESERT OF THE REAL.\n');
+                      window.offlineLogged = true;
+                  }
+              } else {
+                  // If they flip the switch live, show the dramatic unlock sequence
+                  $gateStatus.text('GRID DISCONNECTED. INITIATING LOCAL PROTOCOL...').removeClass('animate-pulse').addClass('text-themeYellow');
+                  
+                  setTimeout(() => {
+                      $overlay.css('opacity', '0');
+                      setTimeout(() => { 
+                          $overlay.addClass('hidden'); 
+                          $('body').css('overflow', ''); 
+                          
+                          if(!window.offlineLogged) {
+                              $('#terminal-output').append('\n\nSYS.LOG // NETWORK DISCONNECTED. ILLUSIONS BLOCKED.\nWELCOME TO THE DESERT OF THE REAL.\n');
+                              window.offlineLogged = true;
+                          }
+                      }, 1500); 
+                  }, 2500); 
+              }
+          }
+      }
+
+      // Pass true on the very first check when the page loads
+      handleConnectionChange(true);
+
+      // Listen for connection toggles (passes false automatically)
+      window.addEventListener('online', () => handleConnectionChange(false));
+      window.addEventListener('offline', () => handleConnectionChange(false));
+
 
 
       // --- WEB AUDIO API ---
